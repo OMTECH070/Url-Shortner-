@@ -7,7 +7,11 @@ import crypto from 'crypto'
 const __filename = fileURLToPath(import.meta.url) 
 const __dirname = path.dirname(__filename) 
  
-const PORT=3000 
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+}); 
  
 const DATA_FILE=path.join("data","links.json") 
  

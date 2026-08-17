@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="A fast and simple URL shortener"
+    >
+
+    <title>URL Shortener</title>
+
+    <link
+        rel="stylesheet"
+        href="../css/style.css"
+    >
+</head>
+
+<body>
+
+    <!-- ================================
+         HEADER
+    ================================= -->
+
+    <header class="hero">
+
+        <div class="logo">
+            🔗
+        </div>
+
+        <h1>URL Shortener</h1>
+
+        <p class="subtitle">
+            Turn long links into short, shareable URLs.
+        </p>
+
+    </header>
+
+
+    <!-- ================================
+         SHORTENER FORM
+    ================================= -->
+
+    <main>
+
+        <form id="shorten-form">
+
+            <div class="form-group">
+
+                <label for="url">
+                    Enter URL
+                </label>
+
+                <input
+                    type="url"
+                    name="url"
+                    id="url"
+                    placeholder="https://example.com/very-long-url"
+                    autocomplete="url"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="shortCode">
+                    Enter Short Code
+                </label>
+
+                <input
+                    type="text"
+                    name="shortCode"
+                    id="shortCode"
+                    placeholder="my-link"
+                    autocomplete="off"
+                    minlength="3"
+                    maxlength="30"
+                    pattern="[A-Za-z0-9_-]+"
+                    title="Use only letters, numbers, hyphens and underscores."
+                    required
+                >
+
+            </div>
+
+
+            <button
+                type="submit"
+                id="submit"
+            >
+                <span id="button-text">
+                    Shorten URL
+                </span>
+
+                <span
+                    id="button-loader"
+                    class="loader"
+                    hidden
+                ></span>
+            </button>
+
+        </form>
+
+
+        <!-- ================================
+             SHORTENED URLS
+        ================================= -->
+
+        <section class="links-section">
+
+            <div class="section-heading">
+
+                <h2>
+                    Your Shortened URLs
+                </h2>
+
+                <span id="link-count">
+                    0 links
+                </span>
+
+            </div>
+
+
+            <ul id="shorten-urls">
+
+                <li class="empty-state">
+                    <div class="empty-icon">
+                        🔗
+                    </div>
+
+                    <p>
+                        Your shortened URLs will appear here.
+                    </p>
+                </li>
+
+            </ul>
+
+        </section>
+
+    </main>
+
+
+    <!-- ================================
+         JAVASCRIPT
+    ================================= -->
+
+    <script>
+
+        const form = document.getElementById("shorten-form");
+
+        const submitButton = document.getElementById("submit");
+
+        const buttonText = document.getElementById("button-text");
+
+        const buttonLoader = document.getElementById("button-loader");
+
+        const urlInput = document.getElementById("url");
+
+        const shortCodeInput = document.getElementById("shortCode");
+
+        const list = document.getElementById("shorten-urls");
+
+        const linkCount = document.getElementById("link-count");
+
+
+        /* =================================
+           FETCH ALL SHORTENED URLS
+        ================================= */
+
+        const fetchShortenedURL = async () => {
+
+            try {
+
+                const response = await fetch("/links");
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch links");
+                }
+
+                const links = await response.json();
+
+                console.log("Links:", links);
+
+
+                list.innerHTML = "";
+
+
+                const entries = Object.entries(links);
+
+
+                /* Update link count */
+
+                linkCount.textContent =
+                    `${entries.length} ${entries.length === 1 ? "link" : "links"}`;
+
+
+                /* Empty state */
+
+                if (entries.length === 0) {
+
+                    const emptyState =
+                        document.createElement("li");
+
+                    emptyState.className = "empty-state";
+
+                    emptyState.innerHTML = `
+                        <div class="empty-icon">
+                            🔗
+                        </div>
+
+                        <p>
+                            Your shortened URLs will appear here.
+                        </p>
+                    `;
+
+                    list.appendChild(emptyState);
+
+                    return;
+                }
+
+
+                /* Create URL cards */
+
+                for (const [shortCode, url] of entries) {
+
+                    const li =
+                        document.createElement("li");
+
+                    li.className = "url-item";
+
+
+                    const truncatedURL =
+                        url.length > 45
+                            ? `${url.slice(0, 45)}...`
+                            : url;
+
+
+                    const shortURL =
+                        `${window.location.origin}/${shortCode}`;
+
+
+                    li.innerHTML = `
+
+                        <div class="url-content">
+
+                            <a
+                                href="/${shortCode}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="short-url"
+                            >
+                                ${shortURL}
+                            </a>
+
+                            <span class="original-url">
+                                ${truncatedURL}
+                            </span>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            class="copy-button"
+                            data-url="${shortURL}"
+                        >
+                            Copy
+                        </button>
+
+                    `;
+
+
+                    list.appendChild(li);
+                }
+
+
+                /* Add copy functionality */
+
+                document
+                    .querySelectorAll(".copy-button")
+                    .forEach(button => {
+
+                        button.addEventListener(
+                            "click",
+                            async () => {
+
+                                const url =
+                                    button.dataset.url;
+
+                                try {
+
+                                    await navigator.clipboard.writeText(url);
+
+                                    const originalText =
+                                        button.textContent;
+
+                                    button.textContent =
+                                        "Copied!";
+
+                                    button.classList.add(
+                                        "copied"
+                                    );
+
+
+                                    setTimeout(() => {
+
+                                        button.textContent =
+                                            originalText;
+
+                                        button.classList.remove(
+                                            "copied"
+                                        );
+
+                                    }, 1500);
+
+                                } catch (error) {
+
+                                    console.error(
+                                        "Copy failed:",
+                                        error
+                                    );
+
+                                }
+
+                            }
+                        );
+
+                    });
+
+            } catch (error) {
+
+                console.error(
+                    "Error fetching links:",
+                    error
+                );
+
+                list.innerHTML = `
+
+                    <li class="error-state">
+
+                        <div class="empty-icon">
+                            ⚠️
+                        </div>
+
+                        <p>
+                            Unable to load shortened URLs.
+                        </p>
+
+                    </li>
+
+                `;
+
+            }
+
+        };
+
+
+        /* =================================
+           FORM SUBMISSION
+        ================================= */
+
+        form.addEventListener(
+            "submit",
+            async (event) => {
+
+                event.preventDefault();
+
+
+                const formData =
+                    new FormData(form);
+
+
+                const url =
+                    formData.get("url");
+
+                const shortCode =
+                    formData.get("shortCode");
+
+
+                console.log(
+                    "URL:",
+                    url
+                );
+
+                console.log(
+                    "Short Code:",
+                    shortCode
+                );
+
+
+                /* Loading state */
+
+                submitButton.disabled = true;
+
+                buttonText.textContent =
+                    "Creating...";
+
+                buttonLoader.hidden = false;
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            "/shorten",
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body: JSON.stringify({
+                                    url,
+                                    shortCode
+                                })
+                            }
+                        );
+
+
+                    if (response.ok) {
+
+                        /* Refresh list */
+
+                        await fetchShortenedURL();
+
+
+                        /* Reset form */
+
+                        form.reset();
+
+
+                        /* Success */
+
+                        buttonText.textContent =
+                            "Created!";
+
+
+                        setTimeout(() => {
+
+                            buttonText.textContent =
+                                "Shorten URL";
+
+                        }, 1500);
+
+                    } else {
+
+                        const errorMessage =
+                            await response.text();
+
+
+                        alert(errorMessage);
+
+                    }
+
+                } catch (error) {
+
+                    console.error(
+                        "Error:",
+                        error
+                    );
+
+                    alert(
+                        "Something went wrong. Please try again."
+                    );
+
+                } finally {
+
+                    submitButton.disabled =
+                        false;
+
+                    buttonLoader.hidden =
+                        true;
+
+                }
+
+            }
+        );
+
+
+        /* =================================
+           INITIAL LOAD
+        ================================= */
+
+        fetchShortenedURL();
+
+    </script>
+
+</body>
+
+</html>

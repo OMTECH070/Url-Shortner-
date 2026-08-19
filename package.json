@@ -7,10 +7,15 @@
   "type": "module",
   "main": "app.js",
   "scripts": {
-    "dev":"node --watch app.js",
-    "start":"node app.js"
+    "dev": "node --env-file=.env --watch app.js",
+    "start": "node app.js"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.0.0",
+    "zod": "^4.4.3"
   }
 }

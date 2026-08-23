@@ -127,8 +127,32 @@
 
             <ul id="links-list">
 
-                {{shortened_urls}}
+                <!-- {{shortened_urls}} -->
 
+                <!--// Generate HTML for shortened URLs
+        const shortenedUrls = Object.entries(links)
+            .map(
+                ([shortCode, url]) =>
+                    `<li>
+                        <a
+                            href="/${shortCode}"
+                            target="_blank"
+                        >
+                            ${req.get("host")}/${shortCode}
+                        </a>
+                        - ${url}
+                    </li>`
+            )
+            .join("");-->
+
+        <% Object.entries(links).map(([shortCode, url]) => {%>
+            <li>
+                <a href="/<%= shortCode %>" target="_blank"><%= host %>/<%= shortCode %></a>   
+                </a> - <%= url%>
+                    
+            </li>
+        
+            <%})%>
             </ul>
 
 

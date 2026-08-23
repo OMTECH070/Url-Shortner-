@@ -13,36 +13,13 @@ export const home_page = async (req, res) => {
     try {
         
         // Inside home_page function
-const filePath = path.join(__dirname, '..', 'views', 'index.html');
-const file = await fs.readFile(filePath, 'utf8');
+//const filePath = path.join(__dirname, '..', 'views', 'index.html');
+//const file = await fs.readFile(filePath, 'utf8');
 
         // Load all shortened URLs
         const links = await loadLinks();
 
-        // Generate HTML for shortened URLs
-        const shortenedUrls = Object.entries(links)
-            .map(
-                ([shortCode, url]) =>
-                    `<li>
-                        <a
-                            href="/${shortCode}"
-                            target="_blank"
-                        >
-                            ${req.get("host")}/${shortCode}
-                        </a>
-                        - ${url}
-                    </li>`
-            )
-            .join("");
-
-        // Replace placeholder in HTML
-        const content = file.replaceAll(
-            "{{shortened_urls}}",
-            shortenedUrls
-        );
-
-        // Send final HTML
-        return res.send(content);
+        return res.render('index',{links,host:req.host})
 
     } catch (err) {
 
@@ -111,47 +88,24 @@ export const  postURLShortner= async (req, res) => {
 
 
 
-export const short_code=  async (req, res) => {
-
+export const short_code = async (req, res) => {
     try {
-
-        // Get shortcode from URL
-        const {
-            shortCode
-        } = req.params;
-
-
-        // Load links
+        const { shortCode } = req.params;
         const links = await loadLinks();
 
-
-        // Check if shortcode exists
         if (!links[shortCode]) {
-
-            return res
-                .status(404)
-                .sendFile(
-                path.join(
-                    __dirname,
-                    "..",
-                    "views",
-                    "error.html"
-            )
-        );
+            // Use render instead of sendFile
+            return res.status(404).render('error', { 
+                // Optional: Pass data to the error page if your template needs it
+                message: "URL not found",
+                url: req.originalUrl 
+            });
         }
 
-
-        // Redirect to original URL
-        return res.redirect(
-            links[shortCode]
-        );
+        return res.redirect(links[shortCode]);
 
     } catch (error) {
-
         console.error(error);
-
-        return res
-            .status(500)
-            .send("Internal server error");
+        return res.status(500).send("Internal server error");
     }
-}
+};   

@@ -11,6 +11,7 @@
     "start": "node app.js"
   },
   "devDependencies": {
+    "ejs-lint": "^2.0.1",
     "nodemon": "^3.1.14"
   },
   "dependencies": {

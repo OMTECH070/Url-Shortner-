@@ -1,85 +1,38 @@
-import fs from "fs/promises";
-import path from "path";
-import { fileURLToPath } from "url";
+import { connectDB } from '../config/db-client.js';
 
-
-/* =========================================
-   PATHS
-========================================= */
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-
-
-
-/* =========================================
-   DATA FILE
-========================================= */
-
-const DATA_FILE = path.join(
-    __dirname,
-    "..",
-    "data",
-    "links.json"
-);
-
-
-/* =========================================
-   LOAD LINKS
-========================================= */
+// We don't get the collection at the top level. 
+// We get it inside the functions to ensure the DB is connected first.
 
 export const loadLinks = async () => {
-
-    try {
-
-        const data = await fs.readFile(
-            DATA_FILE,
-            "utf8"
-        );
-
-        return JSON.parse(data);
-
-    } catch (err) {
-
-        // If links.json doesn't exist
-        if (err.code === "ENOENT") {
-
-            // Create data folder
-            await fs.mkdir(
-                path.dirname(DATA_FILE),
-                {
-                    recursive: true
-                }
-            );
-
-            // Create empty links.json
-            await fs.writeFile(
-                DATA_FILE,
-                JSON.stringify({}, null, 2)
-            );
-
-            return {};
-        }
-
-        console.error(
-            "Error loading links:",
-            err
-        );
-
-        throw err;
-    }
+  try {
+    const db = await connectDB(); // Await the connection
+    const collection = db.collection('shorteners');
+    return await collection.find().toArray();
+  } catch (err) {
+    console.error("Error loading links:", err);
+    throw err;
+  }
 };
 
+export const saveLinks = async (link) => {
+  try {
+    const db = await connectDB(); // Await the connection
+    const collection = db.collection('shorteners');
+    return await collection.insertOne(link);
+  } catch (err) {
+    console.error("Error saving link:", err);
+    throw err;
+  }
+};
 
-/* =========================================
-   SAVE LINKS
-========================================= */
-
-export const saveLinks = async (links) => {
-
-    await fs.writeFile(
-        DATA_FILE,
-        JSON.stringify(links, null, 2)
-    );
+// IMPORTANT: You must pass 'shortCode' as an argument
+export const getLinkByShortCode = async (shortCode) => {
+  try {
+    const db = await connectDB(); // Await the connection
+    const collection = db.collection('shorteners');
+    return await collection.findOne({ shortCode });
+  } catch (err) {
+    console.error("Error fetching link:", err);
+    throw err;
+  }
 };

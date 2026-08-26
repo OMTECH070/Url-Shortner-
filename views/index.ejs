@@ -125,39 +125,23 @@
             </div>
 
 
-            <ul id="links-list">
-
-                <!-- {{shortened_urls}} -->
-
-                <!--// Generate HTML for shortened URLs
-        const shortenedUrls = Object.entries(links)
-            .map(
-                ([shortCode, url]) =>
-                    `<li>
-                        <a
-                            href="/${shortCode}"
-                            target="_blank"
-                        >
-                            ${req.get("host")}/${shortCode}
+            <!-- Inside your views/index.ejs file -->
+                <ul id="links-list">
+                <% if (links.length === 0) { %>
+                    <li>No links yet.</li>
+                <% } else { %>
+                    <% links.forEach(link => { %>
+                    <li>
+                        <!-- Use link.shortCode for the href -->
+                        <a href="/<%= link.shortCode %>" target="_blank">
+                        <%= host %>/<%= link.shortCode %>
                         </a>
-                        - ${url}
-                    </li>`
-            )
-            .join("");-->
-
-        <% Object.entries(links).map(([shortCode, url]) => {%>
-            <li>
-                <a href="/<%= shortCode %>" target="_blank"><%= host %>/<%= shortCode %></a>   
-                </a> - <%= url%>
-                    
-            </li>
-        
-            <%})%>
-            </ul>
-
-
-            
-
+                        <!-- Display the original URL -->
+                        - <%= link.url %>
+                    </li>
+                    <% }); %>
+                <% } %>
+                </ul>
         </section>
 
     </main>

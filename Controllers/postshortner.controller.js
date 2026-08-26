@@ -1,12 +1,7 @@
 import crypto from 'crypto'
-import {loadLinks,saveLinks} from '../models/shortner.models.js'
-import { fileURLToPath } from "url";
-import path from 'path';
-import fs from "fs/promises";
+import {loadLinks,saveLinks,getLinkByShortCode} from '../models/shortner.models.js'
 
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 
 export const home_page = async (req, res) => {
@@ -66,11 +61,13 @@ export const  postURLShortner= async (req, res) => {
 
 
         // Store URL
-        links[finalShortCode] = url;
+        // links[finalShortCode] = url;
 
 
         // Save updated links
-        await saveLinks(links);
+        // await saveLinks(links);
+
+        await saveLinks({url,shortCode})
 
 
         // Go back to homepage
@@ -88,24 +85,25 @@ export const  postURLShortner= async (req, res) => {
 
 
 
+/* =========================================
+   REDIRECT SHORT URL (GET /:shortCode)
+========================================= */
 export const short_code = async (req, res) => {
-    try {
-        const { shortCode } = req.params;
-        const links = await loadLinks();
+  const { shortCode } = req.params;
 
-        if (!links[shortCode]) {
-            // Use render instead of sendFile
-            return res.status(404).render('error', { 
-                // Optional: Pass data to the error page if your template needs it
-                message: "URL not found",
-                url: req.originalUrl 
-            });
-        }
+  try {
+    // Find the link by shortCode
+    const linkData = await getLinkByShortCode(shortCode);
 
-        return res.redirect(links[shortCode]);
-
-    } catch (error) {
-        console.error(error);
-        return res.status(500).send("Internal server error");
+    // If not found, render 404 page
+    if (!linkData) {
+      return res.status(404).render('404', { shortCode });
     }
-};   
+
+    // Redirect to the original URL
+    res.redirect(linkData.url);
+  } catch (err) {
+    console.error('Redirect error:', err);
+    res.status(500).render('error', { message: 'Server error' });
+  }
+};
